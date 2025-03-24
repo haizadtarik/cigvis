@@ -271,15 +271,19 @@ def _load_skin(filename: str, endian: str = '>'):
     d = np.fromfile(filename, dtype=np.int32)
     if endian == '>':
         d = d.byteswap()
-    if (d[0] * 24 + 4) == len(d) or (d[0] * 13 + 4) == len(d):
+    if (d[0] * 24 + 4) == len(d) or (d[0] * 13 + 1) == len(d):
         ncell = d[0]
-
         nele = (len(d) - 4) // ncell
-        nattr = 12 if nele == 24 else 9
-        nnigb = 12 if nele == 24 else 4
-
-        mid = d[4:4 + ncell * nattr].view(np.float32).reshape(ncell, nattr)
-        tail = d[4 + ncell * nattr:].reshape(ncell, nnigb)
+        if nele == 24:
+            nattr = 12
+            nnigb = 12
+            mid = d[4:4 + ncell * nattr].view(np.float32).reshape(ncell, nattr)
+            tail = d[4 + ncell * nattr:].reshape(ncell, nnigb)
+        else:
+            nattr = 9
+            nnigb = 4
+            mid = d[1:1 + ncell * nattr].view(np.float32).reshape(ncell, nattr)
+            tail = d[1 + ncell * nattr:].reshape(ncell, nnigb)
     elif (2 + d[0] * 6 + d[1] * 10) == len(d):
         """.cig format"""
         nctrl = d[0]
